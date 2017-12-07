@@ -12,6 +12,8 @@ from amoco.system import elf
 from amoco.system import pe
 
 #------------------------------------------------------------------------------
+
+
 def read_program(filename):
     '''
     Identifies the program header (ELF/PE) and returns an ELF, PE or DataIO
@@ -43,15 +45,17 @@ def read_program(filename):
 
     logger.warning('unknown format')
     try:
-        data = open(filename,'rb')
-    except (TypeError,IOError):
+        data = open(filename, 'rb')
+    except (TypeError, IOError):
         data = filename
     return DataIO(data)
     ##
 ##
 
-#------------------------------------------------------------------------------
-def load_program(f,cpu=None):
+# ------------------------------------------------------------------------------
+
+
+def load_program(f, cpu=None):
     '''
     Detects program format header (ELF/PE), and *maps* the program in abstract
     memory, loading the associated "system" (linux/win) and "arch" (x86/arm),
@@ -66,39 +70,43 @@ def load_program(f,cpu=None):
 
     p = read_program(f)
 
-    if isinstance(p,(elf.Elf32,elf.Elf64)):
+    if isinstance(p, (elf.Elf32, elf.Elf64)):
 
-        if p.Ehdr.e_machine==elf.EM_386:
-            if p.Ehdr.e_ident['EI_CLASS']==elf.ELFCLASS32 and \
-               p.Ehdr.e_ident['EI_DATA']==elf.ELFDATA2LSB:
+        if p.Ehdr.e_machine == elf.EM_386:
+            if p.Ehdr.e_ident['EI_CLASS'] == elf.ELFCLASS32 and \
+               p.Ehdr.e_ident['EI_DATA'] == elf.ELFDATA2LSB:
                 from amoco.system.linux_x86 import ELF
                 logger.info("linux_x86 program created")
                 return ELF(p)
-        elif p.Ehdr.e_machine==elf.EM_X86_64:
-            if p.Ehdr.e_ident['EI_CLASS']==elf.ELFCLASS64 and \
-               p.Ehdr.e_ident['EI_DATA']==elf.ELFDATA2LSB:
+        elif p.Ehdr.e_machine == elf.EM_X86_64:
+            if p.Ehdr.e_ident['EI_CLASS'] == elf.ELFCLASS64 and \
+               p.Ehdr.e_ident['EI_DATA'] == elf.ELFDATA2LSB:
                 from amoco.system.linux_x64 import ELF
                 logger.info("linux_x64 program created")
                 return ELF(p)
-        elif p.Ehdr.e_machine==elf.EM_ARM:
+        elif p.Ehdr.e_machine == elf.EM_ARM:
             from amoco.system.linux_arm import ELF
             logger.info("linux_arm program created")
             return ELF(p)
-        elif p.Ehdr.e_machine==elf.EM_SPARC:
+        elif p.Ehdr.e_machine == elf.EM_SPARC:
             from amoco.system.leon2 import ELF
             logger.info("leon2 program created")
             return ELF(p)
+        elif p.Ehdr.e_machine == elf.EM_RISCV:
+            from amoco.system.riscv import ELF
+            logger.info("risc-v program created")
+            return ELF(p)
         else:
-            logger.error(u'machine type not supported:\n%s'%p.Ehdr)
+            logger.error(u'machine type not supported:\n%s' % p.Ehdr)
             raise ValueError
 
-    elif isinstance(p,pe.PE):
+    elif isinstance(p, pe.PE):
 
-        if p.NT.Machine==pe.IMAGE_FILE_MACHINE_I386:
+        if p.NT.Machine == pe.IMAGE_FILE_MACHINE_I386:
             from amoco.system.win32 import PE
             logger.info("win32 program created")
             return PE(p)
-        elif p.NT.Machine==pe.IMAGE_FILE_MACHINE_AMD64:
+        elif p.NT.Machine == pe.IMAGE_FILE_MACHINE_AMD64:
             from amoco.system.win64 import PE
             logger.info("win64 program created")
             return PE(p)
@@ -107,6 +115,6 @@ def load_program(f,cpu=None):
             raise ValueError
 
     else:
-        assert isinstance(p,DataIO)
+        assert isinstance(p, DataIO)
         from amoco.system.raw import RawExec
-        return RawExec(p,cpu)
+        return RawExec(p, cpu)

@@ -295,6 +295,8 @@ with Consts('e_machine'):
     EM_ARC_A5=93
     EM_XTENSA=94
     EM_NUM=95
+
+    EM_RISCV=243
     # unofficial values should pick large index:
     EM_ALPHA=0x9026
 
